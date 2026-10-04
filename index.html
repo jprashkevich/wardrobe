@@ -94,6 +94,12 @@ figcaption b{color:var(--ink)}
 .card .thumbs{grid-template-columns:repeat(auto-fill,minmax(70px,1fr))}
 .card p{margin:4px 0 0;font-size:13.5px}
 .card .actions{margin-top:auto;padding-top:10px}
+.beauty{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--ice);font-size:13px;display:grid;gap:4px}
+.beauty b{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--navy)}
+.guide{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:10px}
+.guide h3{margin:0 0 4px;font-size:14px}
+.guide ul{margin:0;padding-left:18px;font-size:13.5px}
+.guide li{margin-bottom:3px}
 .empty{padding:24px;text-align:center;color:var(--muted)}
 details summary{cursor:pointer;font-size:13px;color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){.card,.panel{transition:border-color .15s}}
@@ -140,6 +146,20 @@ details summary{cursor:pointer;font-size:13px;color:var(--muted)}
       <label><input type="checkbox" id="t-wx" checked> Скрыть не по погоде</label>
       <label><input type="checkbox" id="t-fresh"> Не повторять недавние</label>
     </div>
+  </section>
+
+  <section class="panel" aria-labelledby="g-h">
+    <details>
+      <summary><h2 id="g-h" style="display:inline">Макияж и прически</h2> <span class="muted">— правила, по которым подобраны подсказки в образах</span></summary>
+      <div class="guide">
+        <div><h3>Губы</h3><ul><li>Ваши: вишнёвый, ягодный, винный, холодный розовый, малиновый.</li><li>На каждый день — ягодный нюд: розово-бежевый с холодным подтоном.</li><li>Не берите: тёплый бежевый, персик, коралл, терракоту.</li></ul></div>
+        <div><h3>Глаза и брови</h3><ul><li>Тушь чёрная, подводка чёрная или графитовая.</li><li>Тени: тауп, графит, слива, холодный коричневый. Без рыжего, меди и золота.</li><li>Брови: расчесать вверх и закрепить гелем.</li></ul></div>
+        <div><h3>Кожа</h3><ul><li>Лёгкий тон с сатиновым финишем.</li><li>Румяна холодно-розовые или ягодные, без бронзера.</li><li>Хайлайтер жемчужный или серебристый.</li></ul></div>
+        <div><h3>Правило контраста</h3><ul><li>Выделяйте что-то одно: глаза или губы.</li><li>Яркий цвет у лица (синий, вишнёвый, жёлтый) уже акцент — глаза тогда спокойные.</li></ul></div>
+        <div><h3>Коса</h3><ul><li>Низкая расслабленная — офис, поездки.</li><li>Французская или колосок — ветер, шапка, выезды.</li><li>Набок через плечо — повседневно, романтика.</li></ul></div>
+        <div><h3>Шишка и распущенные</h3><ul><li>Гладкая низкая шишка с пробором по центру — переговоры и сцена.</li><li>Небрежная низкая, высокая объёмная, шишка из косы — повседневно, эксперимент, вечер.</li><li>Распущенные: прямые за ушами — офис; волны — вечер; половина волос собрана крабиком — выходные.</li><li>Аксессуары чёрные или серебряные, без черепахового и золота.</li></ul></div>
+      </div>
+    </details>
   </section>
 
   <section aria-labelledby="r-h" style="display:grid;gap:12px">
@@ -270,6 +290,45 @@ function ranked(list){
   }).sort(function(a,b){return b.s-a.s});
 }
 
+/* ---------- hair & makeup ---------- */
+// Прическа — от сценария и погоды (ветер, шапка), макияж — от цветов у лица в образе
+var HAIR={
+  office:[['Низкая расслабленная коса','пряди у лица выпустить'],['Низкая небрежная шишка','серьги — фактурное серебро'],['Распущенные прямые, пробор по центру','заправить за уши']],
+  event:[['Гладкая низкая шишка, пробор по центру','жемчужные гвоздики']],
+  yourt:[['Французская коса или колосок','держится весь день и на ветру'],['Низкая коса','пряди у лица выпустить']],
+  casual:[['Коса набок через плечо','серьги — фактурное серебро'],['Небрежная низкая шишка','пара прядей у лица'],['Половина волос собрана крабиком','чёрный или серебряный крабик']],
+  travel:[['Колосок от макушки','удобно под шапку и капюшон'],['Низкая коса','без заколок, чтобы не давили в дороге']],
+  evening:[['Крупные волны','серьги — крупное серебро'],['Шишка из косы','собранно, но не строго'],['Низкий объёмный пучок с выпущенными прядями','чёрная бархатная лента']],
+  exp:[['Высокая объёмная шишка','к массивным жакетам и жилету'],['Две косы, собранные в пучок','к кружеву и слоям'],['Гладкие волосы, зачёсанные назад','графичный акцент к цвету']]
+};
+function has(L,c){return L.codes.indexOf(c)>=0}
+function beauty(L){
+  var b=curBand(), p=curPrec(), sc=L.scen[0];
+  var opts=HAIR[sc]||HAIR.casual;
+  var hair=opts[hash(todayKey()+':h:'+L.id)%opts.length];
+  if(b==='frost'||b==='severe'||p==='snow')hair=['Колосок от макушки или низкая коса','после шапки выглядят лучше распущенных'];
+  else if(p==='rain'&&/Распущенные|волны|Половина/.test(hair[0]))hair=['Низкая коса','во влажную погоду надёжнее распущенных'];
+  else if(W&&W.wind>8&&/Распущенные|волны|Половина/.test(hair[0]))hair=['Низкая коса или шишка','ветер сильнее 8 м/с — волосы лучше собрать'];
+  var lips='ягодный нюд', eyes='тушь и гель для бровей';
+  if(sc==='event'){lips='вишнёвые или винные губы';eyes='только тушь'}
+  if(sc==='evening'){lips='винные губы';eyes='размытая графитовая стрелка'}
+  if(sc==='exp'){eyes='графичная чёрная стрелка';lips='ягодный нюд'}
+  if(sc==='yourt'||sc==='travel'){lips='бальзам с ягодным оттенком';eyes='тушь, немного холодно-розовых румян'}
+  if(has(L,'Т1')||has(L,'Р15')){lips='вишнёвая помада в тон';eyes='только тушь'}
+  else if(has(L,'Ю2')){lips='винные губы'}
+  if(has(L,'Р3')||has(L,'Т2')){lips='холодный розовый';eyes='тени тауп, без стрелки — синий у лица уже акцент'}
+  if(has(L,'Р9')){lips='холодный розовый';eyes='тени со сливовым оттенком'}
+  if(has(L,'Ж4')){lips='ягодные губы';eyes='серые тени, без коричневого'}
+  if(has(L,'В1')){lips='ягодные или вишнёвые губы — иначе жёлтый перетянет внимание'}
+  if(has(L,'В3')){lips=sc==='exp'?'губы цвета фуксии':'холодный розовый'}
+  if(has(L,'Р7')&&has(L,'Ж1')&&has(L,'О1')){eyes='чёткая чёрная стрелка';lips='прозрачный ягодный блеск'}
+  var box=el('div',{'class':'beauty'});
+  box.appendChild(el('b',{text:'Прическа и макияж'}));
+  box.appendChild(el('span',{text:hair[0]+' — '+hair[1]+'.'}));
+  box.appendChild(el('span',{text:'Макияж: '+eyes+', '+lips+'.'}));
+  return box;
+}
+
 /* ---------- render ---------- */
 function thumbs(codes,big){
   var g=el('div',{'class':'thumbs'});
@@ -302,6 +361,7 @@ function renderDay(){
   box.appendChild(thumbs(L.codes,true));
   if(L.text)box.appendChild(el('p',{style:'margin:0',text:L.text}));
   box.appendChild(tags(L,x.iss));
+  box.appendChild(beauty(L));
   if(L.note)box.appendChild(el('div',{'class':'note',text:L.note}));
   var stEl=el('span',{'class':'status',role:'status'});
   var next=el('button',{'class':'btn',type:'button',text:'Другой вариант'});
@@ -333,7 +393,7 @@ function renderGrid(){
   document.getElementById('count').textContent=r.length+' из '+D.looks.length;
   if(!r.length){g.appendChild(el('div',{'class':'empty panel',text:'Нет образов под эти условия. Снимите галочку «Скрыть не по погоде» или уберите одну из ключевых вещей.'}));return}
   r.forEach(function(x){var L=x.L, stEl=el('span',{'class':'status',role:'status'});
-    var c=el('article',{'class':'card'},[el('div',{'class':'src',text:L.src}),el('h3',{text:L.title}),thumbs(L.codes),L.text?el('p',{text:L.text}):null,tags(L,x.iss)]);
+    var c=el('article',{'class':'card'},[el('div',{'class':'src',text:L.src}),el('h3',{text:L.title}),thumbs(L.codes),L.text?el('p',{text:L.text}):null,tags(L,x.iss),beauty(L)]);
     if(L.note){var d=el('details');d.appendChild(el('summary',{text:'Комментарий стилиста'}));d.appendChild(el('div',{'class':'note',text:L.note}));c.appendChild(d)}
     c.appendChild(el('div',{'class':'actions'},[wornBtn(L,stEl),stEl]));
     g.appendChild(c);
