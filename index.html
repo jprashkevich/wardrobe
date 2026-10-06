@@ -158,6 +158,7 @@ textarea{min-height:70px;resize:vertical}
   .actions .btn{flex:1 1 auto}
   .wx-temp{font-size:46px}
 }
+.hero{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--cherry)}
 </style>
 </head>
 <body>
@@ -377,6 +378,9 @@ function issues(L,c){
   var cold=b==='cold'||b==='frost'||b==='severe';
   if(cold&&!long) out.push(['bad','Холодно для короткого рукава']);
   if(cold&&L.codes.indexOf('П2')>=0&&!long) out.push(['bad','Платье на бретелях — не по морозу']);
+  // Лён и тонкий трикотаж без тёплого слоя — не для мороза, даже с длинным рукавом
+  var warm=L.codes.some(function(x){return /^(Ж1|Ж2|Ж3|Ж5|Ж7|Ж8|П1|П3|П4|Т3|Р11|Б4)$/.test(x)});
+  if((b==='frost'||b==='severe')&&!warm) out.push(['bad','Тонко для мороза — нужен жакет, кардиган или плотная ткань']);
   if(b==='hot'&&heavy) out.push(['bad','Жарко для жакета и плотных тканей']);
   if((b==='hot'||b==='warm')&&L.codes.some(function(x){return /^В[12]/.test(x)})) out.push(['bad','Пуховик не по погоде']);
   if((b==='frost'||b==='severe')&&L.codes.some(function(x){return x==='В3'||x==='Ж6'})) out.push(['bad','Пальто-пиджак и куртка — не по морозу, нужен пуховик']);
@@ -474,10 +478,10 @@ function beauty(L,c){
 }
 
 /* ---------- shared render pieces ---------- */
-function thumbs(codes){
+function thumbs(codes,hero){
   var g=el('div',{'class':'thumbs'});
   codes.forEach(function(c){var it=ITEM[c];if(!it)return;
-    var f=el('figcaption');f.innerHTML='<b>'+esc(c)+'</b> '+esc(it.name)+(it.purchase?' · покупка':'');
+    var f=el('figcaption');f.innerHTML=(c===hero?'<span class="hero">главная</span> ':'')+'<b>'+esc(c)+'</b> '+esc(it.name)+(it.purchase?' · покупка':'');
     g.appendChild(el('figure',null,[el('img',{src:'img/'+it.file+'.jpg',alt:it.name,loading:'lazy'}),f]))});
   return g;
 }
@@ -490,6 +494,7 @@ function tags(L,iss){
   var t=el('div',{'class':'tags'});
   if(L.mine)t.appendChild(el('span',{'class':'tag tote',text:'Моя сборка'}));
   var ar=avgRating(L.id); if(ar)t.appendChild(el('span',{'class':'tag'+(ar.avg<=2?' bad':''),text:'★ '+ar.avg.toFixed(1).replace('.',',')+' · '+ar.n}));
+  if(L.formula)t.appendChild(el('span',{'class':'tag tote',text:L.formula}));
   L.scen.forEach(function(s){t.appendChild(el('span',{'class':'tag',text:SCEN_NAME[s]||s}))});
   var b=bagTag(L); if(b)t.appendChild(b);
   iss.forEach(function(x){t.appendChild(el('span',{'class':'tag '+x[0],text:x[1]}))});
@@ -550,7 +555,7 @@ function renderDay(){
   var i=st.shift%r.length, x=r[i], L=x.L;
   box.appendChild(el('h2',{text:L.title}));
   box.appendChild(el('div',{'class':'muted',style:'font-size:12.5px',text:(pinnedNote&&i===0?'Вы закрепили его в плане · ':'')+L.src+' · вариант '+(i+1)+' из '+r.length}));
-  box.appendChild(thumbs(L.codes));
+  box.appendChild(thumbs(L.codes,L.hero));
   if(L.text)box.appendChild(el('p',{style:'margin:0',text:L.text}));
   box.appendChild(tags(L,x.iss));
   box.appendChild(beauty(L,c));
@@ -598,7 +603,7 @@ function renderGrid(){
   document.getElementById('count').textContent=r.length+' из '+allLooks().length;
   if(!r.length){g.appendChild(el('div',{'class':'empty panel',text:'Нет образов под эти условия. Снимите галочку «Скрыть не по погоде» или уберите одну из ключевых вещей.'}));return}
   r.forEach(function(x){var L=x.L, stEl=el('span',{'class':'status',role:'status'});
-    var card=el('article',{'class':'card'},[el('div',{'class':'src',text:L.src}),el('h3',{text:L.title}),thumbs(L.codes),L.text?el('p',{text:L.text}):null,tags(L,x.iss),beauty(L,c)]);
+    var card=el('article',{'class':'card'},[el('div',{'class':'src',text:L.src}),el('h3',{text:L.title}),thumbs(L.codes,L.hero),L.text?el('p',{text:L.text}):null,tags(L,x.iss),beauty(L,c)]);
     if(L.note){var d=el('details');d.appendChild(el('summary',{text:'Комментарий стилиста'}));d.appendChild(el('div',{'class':'note',text:L.note}));card.appendChild(d)}
     card.appendChild(el('div',{'class':'actions'},wearButtons(L,c.date,stEl).concat([stEl])));
     g.appendChild(card);
@@ -656,7 +661,7 @@ function renderPlan(){
       var L=d.pick.L;
       body.appendChild(el('h3',{text:L.title}));
       body.appendChild(el('div',{'class':'muted',style:'font-size:12px',text:L.src+(d.pinned?'':' · вариант '+d.idx+' из '+d.total)}));
-      body.appendChild(thumbs(L.codes));
+      body.appendChild(thumbs(L.codes,L.hero));
       body.appendChild(tags(L,d.pick.iss));
       var o=outerAdvice(c), bt=beautyText(L,c);
       var lines=['Сверху: '+o[1]+'.'];
