@@ -103,6 +103,61 @@ figcaption b{color:var(--ink)}
 .empty{padding:24px;text-align:center;color:var(--muted)}
 details summary{cursor:pointer;font-size:13px;color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){.card,.panel{transition:border-color .15s}}
+/* tabs */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{border:0;background:transparent;padding:10px 14px;font-weight:700;font-size:14.5px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--cherry)}
+.view{display:grid;gap:22px}
+/* plan */
+.plan{display:grid;gap:12px}
+.pday{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px;min-width:0}
+@media (min-width:900px){.pday{grid-template-columns:220px minmax(0,1fr)}}
+.pday.pinned{border-color:var(--cherry)}
+.pwx{display:grid;gap:4px;align-content:start;font-size:13px}
+.pwx .dname{font-family:var(--display);font-size:24px;font-weight:600;line-height:1.1;color:var(--ink)}
+.pwx .t{font-variant-numeric:tabular-nums;font-weight:700;font-size:15px;color:var(--ink)}
+.pbody{min-width:0;display:grid;gap:6px}
+.pbody h3{margin:0;font-size:16px}
+.pbody .thumbs{grid-template-columns:repeat(auto-fill,minmax(64px,1fr));margin:6px 0}
+.pbody select{font:inherit;font-size:13px;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.prep{font-size:13px;background:var(--chip);border-radius:10px;padding:10px 12px}
+.prep ul{margin:4px 0 0;padding-left:18px}
+.pin{font-size:11px;font-weight:700;color:var(--cherry);letter-spacing:.06em;text-transform:uppercase}
+/* journal */
+.jentry{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:6px;min-width:0}
+.jentry .thumbs{grid-template-columns:repeat(auto-fill,minmax(56px,1fr));margin:4px 0}
+.jentry figcaption{font-size:10.5px}
+.diff{font-size:13px;display:grid;gap:2px}
+.diff .minus{color:var(--bad)} .diff .plus{color:var(--ok)}
+.insights{display:grid;gap:6px;font-size:13.5px}
+.insights li{margin-bottom:4px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+/* editor dialog */
+dialog{border:1px solid var(--line);border-radius:16px;padding:0;background:var(--surface);color:var(--ink);width:min(760px,calc(100vw - 24px));max-height:calc(100dvh - 24px)}
+dialog::backdrop{background:rgba(10,12,20,.45)}
+.dlg{padding:18px;display:grid;gap:10px;overflow:auto;max-height:calc(100dvh - 24px)}
+.dlg h2{font-size:26px}
+.items-edit{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.items-edit figure{position:relative}
+.items-edit .rm{position:absolute;top:4px;right:4px;border:0;border-radius:99px;width:26px;height:26px;background:var(--surface);color:var(--bad);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+textarea,input[type=date],input[type=search]{font:inherit;font-size:14px;width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+textarea{min-height:70px;resize:vertical}
+.dlg .picker{max-height:240px}
+.err{color:var(--bad);font-size:13px}
+[hidden]{display:none!important}
+.pwx .dname::first-letter{text-transform:uppercase}
+/* phone */
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+.btn,.chip{min-height:40px}
+.chip.sm{min-height:34px}
+@media (max-width:520px){
+  body{font-size:15px}
+  dialog{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;border-radius:0;margin:0;border:0}
+  .dlg{max-height:100dvh;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+  .tab{flex:1;padding:12px 8px;font-size:14px}
+  .actions .btn{flex:1 1 auto}
+  .wx-temp{font-size:46px}
+}
 </style>
 </head>
 <body>
@@ -115,38 +170,46 @@ details summary{cursor:pointer;font-size:13px;color:var(--muted)}
     <div class="muted" id="today"></div>
   </header>
 
-  <section class="top">
-    <div class="panel" aria-labelledby="wx-h">
-      <div class="eyebrow" id="wx-h">Погода · <span id="wx-place">Астана</span></div>
-      <div class="wx-now" id="wx-now"><div class="wx-temp">…</div><div class="wx-meta muted">Загружаю прогноз</div></div>
-      <div class="advice" id="advice"></div>
-      <div class="lbl">Погода вручную</div>
-      <div class="row" id="band-chips"></div>
-      <div class="row" style="margin-top:6px" id="prec-chips"></div>
-      <div class="actions"><button class="btn ghost" id="geo" type="button">Погода по моему месту</button><span class="status" id="geo-status"></span></div>
-    </div>
+  <nav class="tabs" role="tablist" aria-label="Разделы">
+    <button class="tab" role="tab" id="tab-today" aria-controls="v-today" aria-selected="true" type="button">Сегодня</button>
+    <button class="tab" role="tab" id="tab-plan" aria-controls="v-plan" aria-selected="false" type="button">Завтра и неделя</button>
+    <button class="tab" role="tab" id="tab-log" aria-controls="v-log" aria-selected="false" type="button">Дневник</button>
+  </nav>
 
-    <div class="panel day" aria-labelledby="day-h">
-      <div class="eyebrow">Образ дня</div>
-      <div id="day"></div>
-    </div>
-  </section>
+  <!-- ===== Сегодня ===== -->
+  <div class="view" id="v-today" role="tabpanel" aria-labelledby="tab-today">
+    <section class="top">
+      <div class="panel" aria-labelledby="wx-h">
+        <div class="eyebrow" id="wx-h">Погода · <span id="wx-place">Астана</span></div>
+        <div class="wx-now" id="wx-now"><div class="wx-temp">…</div><div class="wx-meta muted">Загружаю прогноз</div></div>
+        <div class="advice" id="advice"></div>
+        <div class="lbl">Погода вручную</div>
+        <div class="row" id="band-chips"></div>
+        <div class="row" style="margin-top:6px" id="prec-chips"></div>
+        <div class="actions"><button class="btn ghost" id="geo" type="button">Погода по моему месту</button><span class="status" id="geo-status"></span></div>
+      </div>
+      <div class="panel day">
+        <div class="eyebrow">Образ дня</div>
+        <div id="day"></div>
+      </div>
+    </section>
 
-  <section class="panel filters" aria-labelledby="f-h">
-    <h2 id="f-h">Подобрать образ</h2>
-    <div class="lbl">Сценарий</div>
-    <div class="row" id="scen-chips"></div>
-    <div class="lbl">Ключевые вещи</div>
-    <p class="muted" style="margin:0;font-size:13px">Отметьте вещи, которые точно хотите надеть, — останутся образы, где есть все отмеченные.</p>
-    <div class="groups" id="group-chips" style="margin-top:8px"></div>
-    <div class="picker" id="picker"></div>
-    <div class="selected" id="selected"></div>
-    <div class="toggles">
-      <label><input type="checkbox" id="t-own" checked> Только из того, что есть</label>
-      <label><input type="checkbox" id="t-wx" checked> Скрыть не по погоде</label>
-      <label><input type="checkbox" id="t-fresh"> Не повторять недавние</label>
-    </div>
-  </section>
+    <section class="panel filters" aria-labelledby="f-h">
+      <h2 id="f-h">Подобрать образ</h2>
+      <div class="lbl">Сценарий</div>
+      <div class="row" id="scen-chips"></div>
+      <div class="lbl">Ключевые вещи</div>
+      <p class="muted" style="margin:0;font-size:13px">Отметьте вещи, которые точно хотите надеть, — останутся образы, где есть все отмеченные.</p>
+      <div class="groups" id="group-chips" style="margin-top:8px"></div>
+      <div class="picker" id="picker"></div>
+      <div class="selected" id="selected"></div>
+      <div class="toggles">
+        <label><input type="checkbox" id="t-own" checked> Только из того, что есть</label>
+        <label><input type="checkbox" id="t-wx" checked> Скрыть не по погоде</label>
+        <label><input type="checkbox" id="t-fresh"> Не повторять недавние</label>
+        <label><input type="checkbox" id="t-mine" checked> Показывать мои сборки</label>
+      </div>
+    </section>
 
   <section class="panel" aria-labelledby="g-h">
     <details>
@@ -162,132 +225,209 @@ details summary{cursor:pointer;font-size:13px;color:var(--muted)}
     </details>
   </section>
 
-  <section aria-labelledby="r-h" style="display:grid;gap:12px">
-    <div class="res-head"><h2 id="r-h">Образы</h2><span class="muted" id="count"></span></div>
-    <div class="grid" id="grid"></div>
-  </section>
 
-  <footer class="muted" style="font-size:12.5px">Прогноз — Open-Meteo, обновляется при каждом открытии. Отметки «надела» хранятся только в этом браузере.</footer>
+    <section aria-labelledby="r-h" style="display:grid;gap:12px">
+      <div class="res-head"><h2 id="r-h">Образы</h2><span class="muted" id="count"></span></div>
+      <div class="grid" id="grid"></div>
+    </section>
+  </div>
+
+  <!-- ===== План ===== -->
+  <div class="view" id="v-plan" role="tabpanel" aria-labelledby="tab-plan" hidden>
+    <section class="panel">
+      <h2>План на завтра и неделю</h2>
+      <p class="muted" style="margin:6px 0 0;font-size:13.5px">Образы подобраны под прогноз каждого дня и не повторяются в течение недели. Выберите сценарий дня, листайте варианты и закрепляйте понравившиеся — закреплённый образ на завтра утром станет образом дня. Прогноз дальше 3–4 дней неточный, поэтому план на неделю пересчитывается при каждом открытии, а закреплённые образы остаются.</p>
+      <div class="actions" style="margin-top:10px"><button class="btn ghost" id="plan-reset" type="button">Снять все закрепления</button><span class="status" id="plan-status" role="status"></span></div>
+    </section>
+    <div class="plan" id="plan"></div>
+  </div>
+
+  <!-- ===== Дневник ===== -->
+  <div class="view" id="v-log" role="tabpanel" aria-labelledby="tab-log" hidden>
+    <section class="panel">
+      <h2>Дневник образов</h2>
+      <p class="muted" style="margin:6px 0 0;font-size:13.5px">Что вы надели на самом деле, что поменяли и почему. Из этих записей видно, какие правила капсулы работают, а какие стоит поправить.</p>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn" id="log-add" type="button">Записать сегодняшний образ</button>
+        <button class="btn ghost" id="log-copy" type="button">Скопировать для стилиста</button>
+        <button class="btn ghost" id="log-export" type="button">Сохранить файл</button>
+        <label class="btn ghost" for="log-import" style="cursor:pointer">Загрузить файл</label>
+        <input type="file" id="log-import" accept="application/json,.json" hidden>
+        <span class="status" id="log-status" role="status"></span>
+      </div>
+      <p class="muted" style="margin:8px 0 0;font-size:12.5px">Записи хранятся только в этом браузере. Чтобы перенести их на другое устройство, сохраните файл здесь и загрузите его там. «Скопировать для стилиста» — готовый текст, который можно вставить в чат со мной.</p>
+    </section>
+    <section class="panel">
+      <h2>Что поправить в капсуле</h2>
+      <div class="stats" id="insights" style="margin-top:10px"></div>
+    </section>
+    <section style="display:grid;gap:12px">
+      <div class="res-head"><h2>Записи</h2><span class="muted" id="log-count"></span></div>
+      <div id="log" style="display:grid;gap:12px"></div>
+    </section>
+  </div>
+
+  <footer class="muted" style="font-size:12.5px">Прогноз — Open-Meteo, обновляется при каждом открытии. План, отметки и дневник хранятся только в этом браузере.</footer>
 </div>
 
+<dialog id="dlg" aria-labelledby="dlg-h"><form method="dialog" class="dlg" id="dlg-form"></form></dialog>
 <script>
 (function(){
 'use strict';
-var D=null, W=null, ITEM={};
+var D=null, ITEM={}, WX=[], NOW=null, PLACE='Астана';
 var SCEN=[['all','Все'],['office','Офис'],['event','Деловое мероприятие'],['yourt','Yourt и выезды'],['casual','Повседневно'],['travel','Прогулки и поездки'],['evening','Вечер'],['exp','Эксперимент']];
 var SCEN_NAME={}; SCEN.forEach(function(s){SCEN_NAME[s[0]]=s[1]});
 // Полосы по «ощущается как»: в Астане ветер решает больше, чем термометр
 var BANDS=[['hot','Жарко','от +20°'],['warm','Тепло','+12…+20°'],['cool','Прохладно','+3…+12°'],['cold','Холодно','−7…+3°'],['frost','Мороз','−20…−7°'],['severe','Сильный мороз','ниже −20°']];
 var BAND_NAME={}; BANDS.forEach(function(b){BAND_NAME[b[0]]=b[1]});
-var st={scen:'all',keys:[],group:'',own:true,wx:true,fresh:false,band:null,prec:null,shift:0};
+var PREC_NAME={dry:'без осадков',rain:'дождь',snow:'снег'};
+var REASONS=['Погода оказалась другой','Было холодно','Было жарко','Неудобно','Не подошло к встрече','Вещь в стирке или не готова','Не то настроение','Хотелось ярче','Хотелось строже','Другое'];
+var RATE_NAME={1:'Совсем не моё',2:'Скорее нет',3:'Нормально',4:'Хорошо',5:'Отлично'};
+function stars(n){n=Math.round(n);return '★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n)}
+// Старые записи с «Отлично/Нормально/Не то» переводим в шкалу 1–5
+function rateOf(e){if(e.rating)return e.rating;return {good:5,ok:3,bad:1}[e.verdict]||3}
+var st={scen:'all',keys:[],group:'',own:true,wx:true,fresh:false,mine:true,band:null,prec:null,shift:0,tab:'today'};
 
-function ls(k,v){try{if(v===undefined){return JSON.parse(localStorage.getItem(k))}localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
-var saved=ls('wd-filters'); if(saved){['scen','own','wx','fresh'].forEach(function(k){if(k in saved)st[k]=saved[k]})}
-function persist(){ls('wd-filters',{scen:st.scen,own:st.own,wx:st.wx,fresh:st.fresh})}
+/* ---------- utils ---------- */
+function ls(k,v){try{if(v===undefined){return JSON.parse(localStorage.getItem(k))}localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return null}}
+var saved=ls('wd-filters'); if(saved){['scen','own','wx','fresh','mine'].forEach(function(k){if(k in saved)st[k]=saved[k]})}
+function persist(){ls('wd-filters',{scen:st.scen,own:st.own,wx:st.wx,fresh:st.fresh,mine:st.mine})}
 function el(t,a,h){var e=document.createElement(t);if(a)for(var k in a){if(k==='class')e.className=a[k];else if(k==='text')e.textContent=a[k];else e.setAttribute(k,a[k])}if(h)h.forEach(function(c){if(c)e.appendChild(c)});return e}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-function todayKey(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()}
+function pad(n){return (n<10?'0':'')+n}
+function iso(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function addDays(k,n){var p=k.split('-');var d=new Date(+p[0],+p[1]-1,+p[2]+n);return iso(d)}
+function daysBetween(a,b){var pa=a.split('-'),pb=b.split('-');return Math.round((new Date(+pb[0],+pb[1]-1,+pb[2])-new Date(+pa[0],+pa[1]-1,+pa[2]))/864e5)}
+function TODAY(){return iso(new Date())}
+function dayLabel(k){var p=k.split('-');var d=new Date(+p[0],+p[1]-1,+p[2]);return d.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'})}
+function weekday(k){var p=k.split('-');return new Date(+p[0],+p[1]-1,+p[2]).getDay()}
+function fmt(x){x=Math.round(x);return (x>0?'+':'')+x}
+function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function chip(text,on,fn,sm,title){var b=el('button',{'class':'chip'+(sm?' sm':''),type:'button','aria-pressed':on?'true':'false'});b.textContent=text;if(title)b.title=title;b.addEventListener('click',fn);return b}
+function nm(c){return ITEM[c]?ITEM[c].name:c}
+function setStatus(id,t){var e=document.getElementById(id);if(e)e.textContent=t}
 
-document.getElementById('today').textContent=new Date().toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
+document.getElementById('today').textContent=dayLabel(TODAY());
 
 /* ---------- weather ---------- */
 var WMO={0:'ясно',1:'малооблачно',2:'переменная облачность',3:'пасмурно',45:'туман',48:'изморозь',51:'морось',53:'морось',55:'морось',56:'ледяная морось',57:'ледяная морось',61:'дождь',63:'дождь',65:'сильный дождь',66:'ледяной дождь',67:'ледяной дождь',71:'снег',73:'снег',75:'сильный снег',77:'снежная крупа',80:'ливень',81:'ливень',82:'сильный ливень',85:'снегопад',86:'сильный снегопад',95:'гроза',96:'гроза с градом',99:'гроза с градом'};
 function bandOf(t){return t>=20?'hot':t>=12?'warm':t>=3?'cool':t>=-7?'cold':t>=-20?'frost':'severe'}
 function precOf(code,rain,snow){if(snow>0||[71,73,75,77,85,86].indexOf(code)>=0)return 'snow';if(rain>0.3||(code>=51&&code<=67)||(code>=80&&code<=99))return 'rain';return 'dry'}
 function loadWeather(lat,lon,place){
-  var u='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&daily=apparent_temperature_max,apparent_temperature_min,temperature_2m_max,temperature_2m_min,rain_sum,snowfall_sum,weather_code,wind_speed_10m_max&timezone=auto&forecast_days=1&wind_speed_unit=ms';
-  document.getElementById('wx-place').textContent=place;
+  PLACE=place;
+  var u='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,apparent_temperature,weather_code&daily=apparent_temperature_max,apparent_temperature_min,temperature_2m_max,temperature_2m_min,rain_sum,snowfall_sum,weather_code,wind_speed_10m_max&timezone=auto&forecast_days=8&wind_speed_unit=ms';
   return fetch(u).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()}).then(function(j){
-    var d=j.daily,c=j.current;
-    // Решаем по средней «ощущаемой» за день: утром на работу, вечером домой
-    var feel=(d.apparent_temperature_max[0]+d.apparent_temperature_min[0])/2;
-    W={temp:c.temperature_2m,feel:c.apparent_temperature,dayFeel:feel,min:d.temperature_2m_min[0],max:d.temperature_2m_max[0],
-       fmin:d.apparent_temperature_min[0],fmax:d.apparent_temperature_max[0],wind:d.wind_speed_10m_max[0],
-       code:d.weather_code[0],band:bandOf(feel),prec:precOf(d.weather_code[0],d.rain_sum[0],d.snowfall_sum[0]),place:place};
+    var d=j.daily;
+    NOW={temp:j.current.temperature_2m,feel:j.current.apparent_temperature};
+    WX=d.time.map(function(t,i){
+      // Решаем по средней «ощущаемой» за день: утром на работу, вечером домой
+      var feel=(d.apparent_temperature_max[i]+d.apparent_temperature_min[i])/2;
+      return {date:t,fmin:d.apparent_temperature_min[i],fmax:d.apparent_temperature_max[i],min:d.temperature_2m_min[i],max:d.temperature_2m_max[i],
+        wind:d.wind_speed_10m_max[i],code:d.weather_code[i],band:bandOf(feel),prec:precOf(d.weather_code[i],d.rain_sum[i],d.snowfall_sum[i])};
+    });
     renderAll();
-  }).catch(function(){
-    W=null;
-    document.getElementById('wx-now').innerHTML='<div class="wx-meta">Прогноз не загрузился. Выберите погоду вручную ниже — подбор работает и без интернета-прогноза.</div>';
-    renderAll();
+  }).catch(function(){WX=[];NOW=null;renderAll()});
+}
+function wxFor(date){for(var i=0;i<WX.length;i++)if(WX[i].date===date)return WX[i];return null}
+// Контекст дня: для сегодня учитываем ручной выбор погоды, для остальных — прогноз
+function ctx(date){
+  var w=wxFor(date), today=date===TODAY();
+  return {date:date,w:w,band:(today&&st.band)||(w&&w.band)||'cool',prec:(today&&st.prec)||(w&&w.prec)||'dry',wind:w?w.wind:0,guess:!w&&!(today&&st.band)};
+}
+
+/* ---------- journal & plan storage ---------- */
+var LOG=ls('wd-log')||[];
+var legacyWorn=ls('wd-worn')||{};
+var PLAN=ls('wd-plan')||{};
+function saveLog(){if(ls('wd-log',LOG)===null)setStatus('log-status','Браузер не дал сохранить запись: проверьте, не включён ли приватный режим.')}
+function savePlan(){ls('wd-plan',PLAN)}
+function lastWornDate(lookId){
+  var best=null;
+  LOG.forEach(function(e){if(e.lookId===lookId&&(!best||e.date>best))best=e.date});
+  if(!best&&legacyWorn[lookId])best=iso(new Date(legacyWorn[lookId]));
+  return best;
+}
+function sameSet(a,b){if(a.length!==b.length)return false;var s=a.slice().sort().join(),t=b.slice().sort().join();return s===t}
+function diffOf(e){
+  var base=e.base||[], fin=e.final||[];
+  return {removed:base.filter(function(c){return fin.indexOf(c)<0}),added:fin.filter(function(c){return base.indexOf(c)<0})};
+}
+// Свои сборки из дневника становятся образами каталога: так капсула учится на том, что вы носите
+function myLooks(){
+  var out=[], seen=[];
+  LOG.slice().sort(function(a,b){return b.date<a.date?-1:1}).forEach(function(e){
+    if(!e.final||!e.final.length||rateOf(e)<=2)return;
+    var d=diffOf(e);
+    if(e.lookId&&!d.removed.length&&!d.added.length)return;
+    var key=e.final.slice().sort().join();
+    if(seen.indexOf(key)>=0)return; seen.push(key);
+    out.push({id:'u'+e.id,title:'Моя сборка от '+dayLabel(e.date).replace(/^[^,]+, /,''),codes:e.final.slice(),text:e.comment||'',note:'',scen:[e.scen||'casual'],src:'Мой дневник',bag:false,mine:true});
   });
+  return out;
 }
-function curBand(){return st.band||(W&&W.band)||'cool'}
-function curPrec(){return st.prec||(W&&W.prec)||'dry'}
+function allLooks(){return st.mine?D.looks.concat(myLooks()):D.looks}
+function lookById(id){var a=D.looks.concat(myLooks());for(var i=0;i<a.length;i++)if(String(a[i].id)===String(id))return a[i];return null}
 
-function renderWeather(){
-  var box=document.getElementById('wx-now');
-  if(W){
-    var t=Math.round(W.temp), f=Math.round(W.feel);
-    box.innerHTML='<div class="wx-temp">'+(t>0?'+':'')+t+'°</div><div class="wx-meta"><span>ощущается '+(f>0?'+':'')+f+'°, '+esc(WMO[W.code]||'')+'</span><span class="muted">днём '+fmt(W.min)+'…'+fmt(W.max)+'°, ветер до '+Math.round(W.wind)+' м/с</span><span><span class="band">'+BAND_NAME[curBand()]+(st.band?' · вручную':'')+'</span></span></div>';
-  }
-  var bc=document.getElementById('band-chips'); bc.innerHTML='';
-  bc.appendChild(chip('Авто',!st.band,function(){st.band=null;st.shift=0;renderAll()},true));
-  BANDS.forEach(function(b){bc.appendChild(chip(b[1],st.band===b[0],function(){st.band=b[0];st.shift=0;renderAll()},true,b[2]))});
-  var pc=document.getElementById('prec-chips'); pc.innerHTML='';
-  [['dry','Без осадков'],['rain','Дождь'],['snow','Снег, гололёд']].forEach(function(p){pc.appendChild(chip(p[1],(st.prec||(W&&W.prec))===p[0],function(){st.prec=p[0];st.shift=0;renderAll()},true))});
-  renderAdvice();
+/* ---------- looks: weather fit and ranking ---------- */
+function issues(L,c){
+  var b=c.band, p=c.prec, out=[];
+  var its=L.codes.map(function(x){return ITEM[x]}).filter(Boolean);
+  var long=its.some(function(i){return i.sleeve==='long'});
+  var heavy=its.some(function(i){return /^(Б4|Ж1|Ж2|Ж3|Ж4|Ж5|Ж7|Ж8|Ю4|Ю3)$/.test(i.id)});
+  var cold=b==='cold'||b==='frost'||b==='severe';
+  if(cold&&!long) out.push(['bad','Холодно для короткого рукава']);
+  if(cold&&L.codes.indexOf('П2')>=0&&!long) out.push(['bad','Платье на бретелях — не по морозу']);
+  if(b==='hot'&&heavy) out.push(['bad','Жарко для жакета и плотных тканей']);
+  if((b==='hot'||b==='warm')&&L.codes.some(function(x){return /^В[12]/.test(x)})) out.push(['bad','Пуховик не по погоде']);
+  if((b==='frost'||b==='severe')&&L.codes.some(function(x){return x==='В3'||x==='Ж6'})) out.push(['bad','Пальто-пиджак и куртка — не по морозу, нужен пуховик']);
+  if(b==='cold'&&L.codes.indexOf('В3')>=0) out.push(['warn','Пальто-пиджак — только без ветра и выше нуля']);
+  if(p==='snow'&&L.codes.indexOf('О2')>=0) out.push(['warn','Замшевые ботильоны в снег — в дорогу ботинки О5']);
+  if(p==='rain'&&its.some(function(i){return i.suede})) out.push(['warn','Замша под дождём — замените обувь на О1 или О6']);
+  if(p==='snow'&&L.codes.some(function(x){return x==='О1'||x==='О4'})) out.push(['warn','В снег — ботинки О5 в дорогу, туфли в тоуте']);
+  if((b==='frost'||b==='severe')&&L.codes.indexOf('О6')>=0) out.push(['warn','Кроссовки в мороз — замените на ботинки О5']);
+  return out;
 }
-function fmt(x){x=Math.round(x);return (x>0?'+':'')+x}
-function chip(text,on,fn,sm,title){var b=el('button',{'class':'chip'+(sm?' sm':''),type:'button','aria-pressed':on?'true':'false'});b.textContent=text;if(title)b.title=title;b.addEventListener('click',fn);return b}
+function passes(L,c,scen,keys){
+  if(scen&&scen!=='all'&&L.scen.indexOf(scen)<0)return false;
+  if(st.own&&L.codes.some(function(x){return ITEM[x]&&ITEM[x].purchase}))return false;
+  if(keys)for(var i=0;i<keys.length;i++)if(L.codes.indexOf(keys[i])<0)return false;
+  if(st.wx&&issues(L,c).some(function(x){return x[0]==='bad'}))return false;
+  return true;
+}
+function avgRating(id){var r=LOG.filter(function(e){return e.lookId===id}).map(rateOf);if(!r.length)return null;return {avg:r.reduce(function(a,b){return a+b},0)/r.length,n:r.length}}
+function score(L,c,salt){
+  var iss=issues(L,c), s=0;
+  s-=iss.filter(function(x){return x[0]==='bad'}).length*10;
+  s-=iss.filter(function(x){return x[0]==='warn'}).length*2;
+  var lw=lastWornDate(L.id); if(lw){var dw=daysBetween(lw,c.date); if(dw>=0&&dw<7)s-=6-dw*0.5}
+  // Отлично оценённые свои сборки — чуть выше в выдаче
+  if(L.mine)s+=0.6;
+  // Ваши оценки двигают образ: 5 — вверх, 1–2 — вниз
+  var ar=avgRating(L.id); if(ar)s+=(ar.avg-3)*1.2;
+  s+=(hash(salt+':'+L.id)%1000)/1000; // стабильный выбор на сутки
+  return {L:L,s:s,iss:iss};
+}
+function ranked(list,c,salt){return list.map(function(L){return score(L,c,salt||c.date)}).sort(function(a,b){return b.s-a.s})}
 
-// Что надеть сверху и на ноги — из того, что есть в гардеробе
-function renderAdvice(){
-  var a=document.getElementById('advice'); a.innerHTML='';
-  var b=curBand(), p=curPrec(), out;
-  out={hot:[null,'Верхняя одежда не нужна','Выбирайте образы с лёгким верхом; жакет — только в помещении с кондиционером.'],
-       warm:['Ж6','Жакет из образа','Вечером — куртка из неопрена Ж6.'],
-       cool:['В3','Розовое пальто-пиджак или куртка Ж6','При ветре сильнее 8 м/с — короткий чёрный пуховик В2.'],
-       cold:['В2','Чёрный пуховик В2','Ниже пояса — закрывает жакет. Розовое пальто-пиджак — только в безветренный день выше нуля.'],
-       frost:['В1','Длинный жёлтый пуховик В1','Длина ниже колена закрывает юбки и брюки. Под образ — тонкий термослой.'],
-       severe:['В1','Длинный жёлтый пуховик В1 и термобельё','Шапка, варежки, шарф. Офисные туфли — в тоуте С1, в дорогу ботинки О5.']}[b];
-  a.appendChild(adv(out[0],'Сверху: '+out[1],out[2]));
-  if(p==='snow'||b==='frost'||b==='severe') a.appendChild(adv('О5','Обувь в дорогу: ботинки О5','Лодочки, ботильоны и лоферы на каблуке — переобуться в офисе, нести в тоуте.'));
-  if(p==='rain') a.appendChild(el('div',{'class':'alert',text:'Дождь: замша не любит воду. Сегодня без О2, О3, О4, О5 и коричневой замшевой сумки — лучше кожаные лодочки О1 или кроссовки О6, сумка — тоут С1.'}));
+/* ---------- advice: outerwear & shoes ---------- */
+function outerAdvice(c){
+  return {hot:[null,'Верхняя одежда не нужна','Выбирайте образы с лёгким верхом; жакет — только в помещении с кондиционером.'],
+    warm:['Ж6','Жакет из образа','Вечером — куртка из неопрена Ж6.'],
+    cool:['В3','Розовое пальто-пиджак или куртка Ж6','При ветре сильнее 8 м/с — короткий чёрный пуховик В2.'],
+    cold:['В2','Чёрный пуховик В2','Ниже пояса — закрывает жакет. Розовое пальто-пиджак — только в безветренный день выше нуля.'],
+    frost:['В1','Длинный жёлтый пуховик В1','Длина ниже колена закрывает юбки и брюки. Под образ — тонкий термослой.'],
+    severe:['В1','Длинный жёлтый пуховик В1 и термобельё','Шапка, варежки, шарф. Офисные туфли — в тоуте С1, в дорогу ботинки О5.']}[c.band];
+}
+function shoeAdvice(c){
+  var out=[];
+  if(c.prec==='snow'||c.band==='frost'||c.band==='severe')out.push(['О5','Обувь в дорогу: ботинки О5','Лодочки, ботильоны и лоферы на каблуке — переобуться на месте, нести в тоуте.']);
+  if(c.prec==='rain')out.push([null,'Дождь: без замши','О2, О3, О4, О5 и коричневая замшевая сумка — не в этот день. Лучше кожаные лодочки О1 или кроссовки О6, сумка — тоут С1.']);
+  return out;
 }
 function adv(code,title,text){
   var it=code&&ITEM[code];
   var pic=it?el('img',{src:'img/'+it.file+'.jpg',alt:''}):el('div',{'class':'ic',text:'—'});
   return el('div',{'class':'adv'},[pic,el('div',null,[el('b',{text:title}),el('span',{'class':'muted',text:text})])]);
-}
-
-/* ---------- looks: weather fit and ranking ---------- */
-function issues(L){
-  var b=curBand(), p=curPrec(), out=[];
-  var its=L.codes.map(function(c){return ITEM[c]}).filter(Boolean);
-  var long=its.some(function(i){return i.sleeve==='long'});
-  var heavy=its.some(function(i){return /^(Б4|Ж1|Ж2|Ж3|Ж4|Ж5|Ж7|Ж8|Ю4|Ю3)$/.test(i.id)});
-  if((b==='cold'||b==='frost'||b==='severe')&&!long) out.push(['bad','Холодно для короткого рукава']);
-  if((b==='cold'||b==='frost'||b==='severe')&&L.codes.indexOf('П2')>=0&&!long) out.push(['bad','Платье на бретелях — не по морозу']);
-  if(b==='hot'&&heavy) out.push(['bad','Жарко для жакета и плотных тканей']);
-  if(b==='hot'&&L.codes.some(function(c){return /^В/.test(c)})) out.push(['bad','Пуховик не по погоде']);
-  if(p==='rain'&&its.some(function(i){return i.suede})) out.push(['warn','Замша под дождём — замените обувь на О1 или О6']);
-  if(p==='snow'&&L.codes.some(function(c){return c==='О1'||c==='О4'})) out.push(['warn','В снег — ботинки О5 в дорогу, туфли в тоуте']);
-  if((b==='frost'||b==='severe')&&L.codes.indexOf('О6')>=0) out.push(['warn','Кроссовки в мороз — замените на ботинки О5']);
-  return out;
-}
-var worn=ls('wd-worn')||{};
-function daysSinceWorn(id){var t=worn[id];if(!t)return 999;return Math.floor((Date.now()-t)/864e5)}
-function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
-function filtered(){
-  return D.looks.filter(function(L){
-    if(st.scen!=='all'&&L.scen.indexOf(st.scen)<0)return false;
-    if(st.own&&L.codes.some(function(c){return ITEM[c]&&ITEM[c].purchase}))return false;
-    for(var i=0;i<st.keys.length;i++)if(L.codes.indexOf(st.keys[i])<0)return false;
-    if(st.wx&&issues(L).some(function(x){return x[0]==='bad'}))return false;
-    if(st.fresh&&daysSinceWorn(L.id)<7)return false;
-    return true;
-  });
-}
-function ranked(list){
-  var day=todayKey();
-  return list.map(function(L){
-    var iss=issues(L), s=0;
-    s-=iss.filter(function(x){return x[0]==='bad'}).length*10;
-    s-=iss.filter(function(x){return x[0]==='warn'}).length*2;
-    var dw=daysSinceWorn(L.id); if(dw<7)s-=6-dw*0.5;
-    s+=(hash(day+':'+L.id)%1000)/1000; // стабильный «образ дня» на сутки
-    return {L:L,s:s,iss:iss};
-  }).sort(function(a,b){return b.s-a.s});
 }
 
 /* ---------- hair & makeup ---------- */
@@ -302,13 +442,14 @@ var HAIR={
   exp:[['Высокая объёмная шишка','к массивным жакетам и жилету'],['Две косы, собранные в пучок','к кружеву и слоям'],['Гладкие волосы, зачёсанные назад','графичный акцент к цвету']]
 };
 function has(L,c){return L.codes.indexOf(c)>=0}
-function beauty(L){
-  var b=curBand(), p=curPrec(), sc=L.scen[0];
+function beautyText(L,c){
+  var b=c.band, p=c.prec, sc=L.scen[0];
   var opts=HAIR[sc]||HAIR.casual;
-  var hair=opts[hash(todayKey()+':h:'+L.id)%opts.length];
+  var hair=opts[hash(c.date+':h:'+L.id)%opts.length];
+  var loose=/Распущенные|волны|Половина/;
   if(b==='frost'||b==='severe'||p==='snow')hair=['Колосок от макушки или низкая коса','после шапки выглядят лучше распущенных'];
-  else if(p==='rain'&&/Распущенные|волны|Половина/.test(hair[0]))hair=['Низкая коса','во влажную погоду надёжнее распущенных'];
-  else if(W&&W.wind>8&&/Распущенные|волны|Половина/.test(hair[0]))hair=['Низкая коса или шишка','ветер сильнее 8 м/с — волосы лучше собрать'];
+  else if(p==='rain'&&loose.test(hair[0]))hair=['Низкая коса','во влажную погоду надёжнее распущенных'];
+  else if(c.wind>8&&loose.test(hair[0]))hair=['Низкая коса или шишка','ветер сильнее 8 м/с — волосы лучше собрать'];
   var lips='ягодный нюд', eyes='тушь и гель для бровей';
   if(sc==='event'){lips='вишнёвые или винные губы';eyes='только тушь'}
   if(sc==='evening'){lips='винные губы';eyes='размытая графитовая стрелка'}
@@ -322,86 +463,428 @@ function beauty(L){
   if(has(L,'В1')){lips='ягодные или вишнёвые губы — иначе жёлтый перетянет внимание'}
   if(has(L,'В3')){lips=sc==='exp'?'губы цвета фуксии':'холодный розовый'}
   if(has(L,'Р7')&&has(L,'Ж1')&&has(L,'О1')){eyes='чёткая чёрная стрелка';lips='прозрачный ягодный блеск'}
-  var box=el('div',{'class':'beauty'});
+  return {hair:hair[0]+' — '+hair[1]+'.',makeup:'Макияж: '+eyes+', '+lips+'.'};
+}
+function beauty(L,c){
+  var t=beautyText(L,c), box=el('div',{'class':'beauty'});
   box.appendChild(el('b',{text:'Прическа и макияж'}));
-  box.appendChild(el('span',{text:hair[0]+' — '+hair[1]+'.'}));
-  box.appendChild(el('span',{text:'Макияж: '+eyes+', '+lips+'.'}));
+  box.appendChild(el('span',{text:t.hair}));
+  box.appendChild(el('span',{text:t.makeup}));
   return box;
 }
 
-/* ---------- render ---------- */
-function thumbs(codes,big){
+/* ---------- shared render pieces ---------- */
+function thumbs(codes){
   var g=el('div',{'class':'thumbs'});
   codes.forEach(function(c){var it=ITEM[c];if(!it)return;
-    g.appendChild(el('figure',null,[el('img',{src:'img/'+it.file+'.jpg',alt:it.name,loading:'lazy'}),(function(){var f=el('figcaption');f.innerHTML='<b>'+esc(c)+'</b> '+esc(it.name)+(it.purchase?' · покупка':'');return f})()]))});
+    var f=el('figcaption');f.innerHTML='<b>'+esc(c)+'</b> '+esc(it.name)+(it.purchase?' · покупка':'');
+    g.appendChild(el('figure',null,[el('img',{src:'img/'+it.file+'.jpg',alt:it.name,loading:'lazy'}),f]))});
   return g;
+}
+function bagTag(L){
+  if(L.bag)return el('span',{'class':'tag bag',text:'+ замшевая сумка'});
+  if(L.codes.some(function(c){return c==='О1'||c==='О2'})&&L.scen.some(function(s){return s==='office'||s==='event'}))return el('span',{'class':'tag tote',text:'+ тоут С1'});
+  return null;
 }
 function tags(L,iss){
   var t=el('div',{'class':'tags'});
-  L.scen.forEach(function(s){t.appendChild(el('span',{'class':'tag',text:SCEN_NAME[s]}))});
-  if(L.bag)t.appendChild(el('span',{'class':'tag bag',text:'+ замшевая сумка'}));
-  else if(L.codes.some(function(c){return c==='О1'||c==='О2'})&&L.scen.some(function(s){return s==='office'||s==='event'}))t.appendChild(el('span',{'class':'tag tote',text:'+ тоут С1'}));
+  if(L.mine)t.appendChild(el('span',{'class':'tag tote',text:'Моя сборка'}));
+  var ar=avgRating(L.id); if(ar)t.appendChild(el('span',{'class':'tag'+(ar.avg<=2?' bad':''),text:'★ '+ar.avg.toFixed(1).replace('.',',')+' · '+ar.n}));
+  L.scen.forEach(function(s){t.appendChild(el('span',{'class':'tag',text:SCEN_NAME[s]||s}))});
+  var b=bagTag(L); if(b)t.appendChild(b);
   iss.forEach(function(x){t.appendChild(el('span',{'class':'tag '+x[0],text:x[1]}))});
   return t;
 }
-function wornBtn(L,statusEl){
-  var b=el('button',{'class':'btn ghost',type:'button'});
-  var dw=daysSinceWorn(L.id);
-  b.textContent=dw===0?'Надела сегодня ✓':'Надела сегодня';
-  b.addEventListener('click',function(){worn[L.id]=Date.now();ls('wd-worn',worn);statusEl.textContent='Отмечено: этот образ уйдёт вниз на неделю.';b.textContent='Надела сегодня ✓'});
-  return b;
+// Две кнопки: быстро «как есть» и подробно «с изменениями»
+function wearButtons(L,date,statusEl){
+  var done=LOG.some(function(e){return e.date===date&&e.lookId===L.id});
+  var quick=el('button',{'class':'btn ghost',type:'button',text:done?'Записано ✓':'Надела как есть'});
+  quick.addEventListener('click',function(){
+    if(done){statusEl.textContent='Этот образ уже записан в дневник на '+dayLabel(date)+'.';return}
+    // Быстрая запись — только оценка, вещи как в образе
+    var row=el('div',{'class':'row',style:'align-items:center;width:100%'},[el('span',{'class':'muted',style:'font-size:13px',text:'Оценка:'})]);
+    [1,2,3,4,5].forEach(function(n){var b=chip(String(n),false,function(){
+      addEntry({date:date,lookId:L.id,base:L.codes.slice(),final:L.codes.slice(),scen:L.scen[0],reasons:[],comment:'',rating:n});
+      row.remove(); statusEl.textContent='Записано: '+stars(n)+'. Отзыв можно добавить в дневнике.'; quick.textContent='Записано ✓'; done=true; renderLog();
+    },true);b.style.minWidth='38px';row.appendChild(b)});
+    quick.parentNode.insertBefore(row,quick.parentNode.firstChild);
+  });
+  var edit=el('button',{'class':'btn ghost',type:'button',text:'Пересобрать и записать'});
+  edit.addEventListener('click',function(){openEditor({date:date,look:L})});
+  return [quick,edit];
+}
+
+/* ---------- today ---------- */
+function renderWeather(){
+  var c=ctx(TODAY()), box=document.getElementById('wx-now'), w=c.w;
+  document.getElementById('wx-place').textContent=PLACE;
+  if(w&&NOW){
+    box.innerHTML='<div class="wx-temp">'+fmt(NOW.temp)+'°</div><div class="wx-meta"><span>ощущается '+fmt(NOW.feel)+'°, '+esc(WMO[w.code]||'')+'</span><span class="muted">днём '+fmt(w.min)+'…'+fmt(w.max)+'°, ветер до '+Math.round(w.wind)+' м/с</span><span><span class="band">'+BAND_NAME[c.band]+(st.band?' · вручную':'')+'</span></span></div>';
+  }else{
+    box.innerHTML='<div class="wx-meta">Прогноз не загрузился. Выберите погоду вручную ниже — подбор работает и так.</div>';
+  }
+  var bc=document.getElementById('band-chips'); bc.innerHTML='';
+  bc.appendChild(chip('Авто',!st.band,function(){st.band=null;st.shift=0;renderAll()},true));
+  BANDS.forEach(function(b){bc.appendChild(chip(b[1],st.band===b[0],function(){st.band=b[0];st.shift=0;renderAll()},true,b[2]))});
+  var pc=document.getElementById('prec-chips'); pc.innerHTML='';
+  [['dry','Без осадков'],['rain','Дождь'],['snow','Снег, гололёд']].forEach(function(p){pc.appendChild(chip(p[1],c.prec===p[0],function(){st.prec=p[0];st.shift=0;renderAll()},true))});
+  var a=document.getElementById('advice'); a.innerHTML='';
+  var o=outerAdvice(c); a.appendChild(adv(o[0],'Сверху: '+o[1],o[2]));
+  shoeAdvice(c).forEach(function(s){a.appendChild(s[0]?adv(s[0],s[1],s[2]):el('div',{'class':'alert',text:s[1]+'. '+s[2]}))});
+}
+function todayList(){
+  var c=ctx(TODAY());
+  return allLooks().filter(function(L){
+    if(!passes(L,c,st.scen,st.keys))return false;
+    if(st.fresh){var lw=lastWornDate(L.id);if(lw&&daysBetween(lw,c.date)<7)return false}
+    return true;
+  });
 }
 function renderDay(){
   var box=document.getElementById('day'); box.innerHTML='';
-  var r=ranked(filtered());
+  var c=ctx(TODAY()), r=ranked(todayList(),c);
+  // Закреплённый вчера образ на сегодня — первым
+  var p=PLAN[c.date], pinnedNote=false;
+  if(p&&p.pinned){var pl=lookById(p.pinned);if(pl){r=r.filter(function(x){return x.L.id!==pl.id});r.unshift(score(pl,c,c.date));pinnedNote=true}}
   if(!r.length){box.appendChild(el('p',{'class':'muted',text:'Под эти фильтры образов нет. Снимите одну из ключевых вещей или выберите другой сценарий.'}));return}
-  var x=r[st.shift%r.length], L=x.L;
+  var i=st.shift%r.length, x=r[i], L=x.L;
   box.appendChild(el('h2',{text:L.title}));
-  box.appendChild(el('div',{'class':'muted',style:'font-size:12.5px',text:L.src+' · вариант '+((st.shift%r.length)+1)+' из '+r.length}));
-  box.appendChild(thumbs(L.codes,true));
+  box.appendChild(el('div',{'class':'muted',style:'font-size:12.5px',text:(pinnedNote&&i===0?'Вы закрепили его в плане · ':'')+L.src+' · вариант '+(i+1)+' из '+r.length}));
+  box.appendChild(thumbs(L.codes));
   if(L.text)box.appendChild(el('p',{style:'margin:0',text:L.text}));
   box.appendChild(tags(L,x.iss));
-  box.appendChild(beauty(L));
+  box.appendChild(beauty(L,c));
   if(L.note)box.appendChild(el('div',{'class':'note',text:L.note}));
   var stEl=el('span',{'class':'status',role:'status'});
   var next=el('button',{'class':'btn',type:'button',text:'Другой вариант'});
   next.addEventListener('click',function(){st.shift++;renderDay()});
-  box.appendChild(el('div',{'class':'actions'},[next,wornBtn(L,stEl),stEl]));
+  box.appendChild(el('div',{'class':'actions'},[next].concat(wearButtons(L,c.date,stEl),[stEl])));
 }
 function renderScen(){
   var c=document.getElementById('scen-chips'); c.innerHTML='';
-  SCEN.forEach(function(s){c.appendChild(chip(s[1],st.scen===s[0],function(){st.scen=s[0];st.shift=0;persist();renderAll()}))});
+  SCEN.forEach(function(s){c.appendChild(chip(s[1],st.scen===s[0],function(){st.scen=s[0];st.shift=0;persist();renderToday()}))});
 }
-function renderPicker(){
+function buildPicker(container,groupState,selected,onToggle){
   var groups=[]; D.items.forEach(function(i){if(!i.purchase&&groups.indexOf(i.group)<0)groups.push(i.group)});
-  if(!st.group)st.group=groups[0];
-  var gc=document.getElementById('group-chips'); gc.innerHTML='';
-  groups.forEach(function(g){gc.appendChild(chip(g,st.group===g,function(){st.group=g;renderPicker()},true))});
-  var p=document.getElementById('picker'); p.innerHTML='';
-  D.items.filter(function(i){return i.group===st.group&&!i.purchase}).forEach(function(i){
-    var on=st.keys.indexOf(i.id)>=0;
-    var b=el('button',{'class':'pick',type:'button','aria-pressed':on?'true':'false'},[el('img',{src:'img/'+i.file+'.jpg',alt:'',loading:'lazy'}),el('span',{text:i.id+' '+i.name})]);
-    b.addEventListener('click',function(){var k=st.keys.indexOf(i.id);if(k>=0)st.keys.splice(k,1);else st.keys.push(i.id);st.shift=0;renderAll()});
-    p.appendChild(b);
-  });
+  if(!groupState.g)groupState.g=groups[0];
+  var gc=el('div',{'class':'groups'}), p=el('div',{'class':'picker'});
+  function draw(){
+    gc.innerHTML=''; p.innerHTML='';
+    groups.forEach(function(g){gc.appendChild(chip(g,groupState.g===g,function(){groupState.g=g;draw()},true))});
+    D.items.filter(function(i){return i.group===groupState.g&&!i.purchase}).forEach(function(i){
+      var on=selected().indexOf(i.id)>=0;
+      var b=el('button',{'class':'pick',type:'button','aria-pressed':on?'true':'false'},[el('img',{src:'img/'+i.file+'.jpg',alt:'',loading:'lazy'}),el('span',{text:i.id+' '+i.name})]);
+      b.addEventListener('click',function(){onToggle(i.id);draw()});
+      p.appendChild(b);
+    });
+  }
+  draw(); container.appendChild(gc); container.appendChild(p);
+}
+var keyGroup={g:''};
+function renderPicker(){
+  var gc=document.getElementById('group-chips'), p=document.getElementById('picker');
+  var tmp=el('div'); buildPicker(tmp,keyGroup,function(){return st.keys},function(id){var k=st.keys.indexOf(id);if(k>=0)st.keys.splice(k,1);else st.keys.push(id);st.shift=0;renderSelected();renderDay();renderGrid()});
+  gc.replaceWith(Object.assign(tmp.children[0],{id:'group-chips'})); gc=document.getElementById('group-chips'); gc.style.marginTop='8px';
+  p.replaceWith(Object.assign(tmp.children[0],{id:'picker'}));
+  renderSelected();
+}
+function renderSelected(){
   var s=document.getElementById('selected'); s.innerHTML='';
-  st.keys.forEach(function(k){s.appendChild(chip('✕ '+k+' '+ITEM[k].name,true,function(){st.keys.splice(st.keys.indexOf(k),1);st.shift=0;renderAll()},true))});
-  if(st.keys.length>1)s.appendChild(chip('Сбросить все',false,function(){st.keys=[];st.shift=0;renderAll()},true));
+  st.keys.forEach(function(k){s.appendChild(chip('✕ '+k+' '+nm(k),true,function(){st.keys.splice(st.keys.indexOf(k),1);st.shift=0;renderPicker();renderDay();renderGrid()},true))});
+  if(st.keys.length>1)s.appendChild(chip('Сбросить все',false,function(){st.keys=[];st.shift=0;renderPicker();renderDay();renderGrid()},true));
 }
 function renderGrid(){
-  var r=ranked(filtered()), g=document.getElementById('grid'); g.innerHTML='';
-  document.getElementById('count').textContent=r.length+' из '+D.looks.length;
+  var c=ctx(TODAY()), r=ranked(todayList(),c), g=document.getElementById('grid'); g.innerHTML='';
+  document.getElementById('count').textContent=r.length+' из '+allLooks().length;
   if(!r.length){g.appendChild(el('div',{'class':'empty panel',text:'Нет образов под эти условия. Снимите галочку «Скрыть не по погоде» или уберите одну из ключевых вещей.'}));return}
   r.forEach(function(x){var L=x.L, stEl=el('span',{'class':'status',role:'status'});
-    var c=el('article',{'class':'card'},[el('div',{'class':'src',text:L.src}),el('h3',{text:L.title}),thumbs(L.codes),L.text?el('p',{text:L.text}):null,tags(L,x.iss),beauty(L)]);
-    if(L.note){var d=el('details');d.appendChild(el('summary',{text:'Комментарий стилиста'}));d.appendChild(el('div',{'class':'note',text:L.note}));c.appendChild(d)}
-    c.appendChild(el('div',{'class':'actions'},[wornBtn(L,stEl),stEl]));
-    g.appendChild(c);
+    var card=el('article',{'class':'card'},[el('div',{'class':'src',text:L.src}),el('h3',{text:L.title}),thumbs(L.codes),L.text?el('p',{text:L.text}):null,tags(L,x.iss),beauty(L,c)]);
+    if(L.note){var d=el('details');d.appendChild(el('summary',{text:'Комментарий стилиста'}));d.appendChild(el('div',{'class':'note',text:L.note}));card.appendChild(d)}
+    card.appendChild(el('div',{'class':'actions'},wearButtons(L,c.date,stEl).concat([stEl])));
+    g.appendChild(card);
   });
 }
-function renderAll(){renderWeather();renderScen();renderPicker();renderDay();renderGrid()}
+function renderToday(){renderWeather();renderScen();renderDay();renderGrid()}
 
-['own','wx','fresh'].forEach(function(k){var e=document.getElementById('t-'+k);e.checked=st[k];e.addEventListener('change',function(){st[k]=e.checked;st.shift=0;persist();renderDay();renderGrid()})});
+/* ---------- plan: tomorrow and the week ---------- */
+function defaultScen(date){var w=weekday(date);return (w===0||w===6)?'casual':'office'}
+var MAIN=/^(Б|Ю|П|Р|Т|Ж|В)/; // обувь, сумки и ремни повторять можно
+function buildPlan(){
+  var days=[], used=[], prev=null, t=TODAY();
+  for(var i=1;i<=7;i++){
+    var date=addDays(t,i), c=ctx(date), p=PLAN[date]||{};
+    var scen=p.scen||defaultScen(date);
+    var list=allLooks().filter(function(L){return passes(L,c,scen,null)});
+    var r=ranked(list,c,date+':plan').map(function(x){
+      // Не повторять образ за неделю и не надевать те же основные вещи два дня подряд
+      if(used.indexOf(x.L.id)>=0)x.s-=20;
+      if(prev){var ov=x.L.codes.filter(function(cd){return MAIN.test(cd)&&prev.indexOf(cd)>=0}).length;x.s-=ov*1.5}
+      return x;
+    }).sort(function(a,b){return b.s-a.s});
+    var pick=null;
+    if(p.pinned){var pl=lookById(p.pinned);if(pl)pick=score(pl,c,date)}
+    if(!pick&&r.length)pick=r[(p.shift||0)%r.length];
+    if(pick){used.push(pick.L.id);prev=pick.L.codes}
+    days.push({date:date,c:c,scen:scen,pick:pick,total:r.length,pinned:!!p.pinned,idx:((p.shift||0)%Math.max(r.length,1))+1});
+  }
+  return days;
+}
+function renderPlan(){
+  var box=document.getElementById('plan'); box.innerHTML='';
+  if(!D)return;
+  var days=buildPlan();
+  if(!WX.length)box.appendChild(el('div',{'class':'alert',text:'Прогноз не загрузился, поэтому план собран для прохладной погоды без осадков. Откройте страницу позже, и он пересчитается.'}));
+  days.forEach(function(d,k){
+    var c=d.c, w=c.w;
+    var wx=el('div',{'class':'pwx'});
+    wx.appendChild(el('div',{'class':'dname',text:(k===0?'Завтра, ':'')+dayLabel(d.date).replace(/,.*$/,'')}));
+    wx.appendChild(el('div',{'class':'muted',text:dayLabel(d.date).replace(/^[^,]+, /,'')}));
+    if(w){
+      wx.appendChild(el('div',{'class':'t',text:fmt(w.min)+'…'+fmt(w.max)+'°'}));
+      wx.appendChild(el('div',{'class':'muted',text:'ощущается '+fmt(w.fmin)+'…'+fmt(w.fmax)+'°, '+(WMO[w.code]||'')+', ветер до '+Math.round(w.wind)+' м/с'}));
+    }else wx.appendChild(el('div',{'class':'muted',text:'нет прогноза'}));
+    wx.appendChild(el('div',null,[el('span',{'class':'band',text:BAND_NAME[c.band]})]));
+    if(k>=3&&w)wx.appendChild(el('div',{'class':'muted',style:'font-size:12px',text:'Дальний прогноз — проверьте накануне.'}));
+
+    var body=el('div',{'class':'pbody'});
+    var sel=el('select',{'aria-label':'Сценарий дня'});
+    SCEN.slice(1).forEach(function(s){var o=el('option',{value:s[0],text:s[1]});if(s[0]===d.scen)o.selected=true;sel.appendChild(o)});
+    sel.addEventListener('change',function(){PLAN[d.date]=PLAN[d.date]||{};PLAN[d.date].scen=sel.value;PLAN[d.date].shift=0;PLAN[d.date].pinned=null;savePlan();renderPlan()});
+    body.appendChild(el('div',{'class':'row',style:'align-items:center'},[el('span',{'class':'muted',style:'font-size:13px',text:'Сценарий:'}),sel,d.pinned?el('span',{'class':'pin',text:'Закреплено'}):null]));
+    if(!d.pick){body.appendChild(el('p',{'class':'muted',text:'Под этот сценарий и погоду образов нет. Выберите другой сценарий.'}))}
+    else{
+      var L=d.pick.L;
+      body.appendChild(el('h3',{text:L.title}));
+      body.appendChild(el('div',{'class':'muted',style:'font-size:12px',text:L.src+(d.pinned?'':' · вариант '+d.idx+' из '+d.total)}));
+      body.appendChild(thumbs(L.codes));
+      body.appendChild(tags(L,d.pick.iss));
+      var o=outerAdvice(c), bt=beautyText(L,c);
+      var lines=['Сверху: '+o[1]+'.'];
+      shoeAdvice(c).forEach(function(s){lines.push(s[1]+'.')});
+      lines.push(bt.hair); lines.push(bt.makeup);
+      body.appendChild(el('div',{'class':'beauty'},[el('b',{text:'Погода, прическа, макияж'})].concat(lines.map(function(t){return el('span',{text:t})}))));
+      if(k===0)body.appendChild(prepList(L,c));
+      var nx=el('button',{'class':'btn ghost',type:'button',text:'Другой вариант'});
+      nx.addEventListener('click',function(){PLAN[d.date]=PLAN[d.date]||{};PLAN[d.date].shift=(PLAN[d.date].shift||0)+1;PLAN[d.date].pinned=null;savePlan();renderPlan()});
+      var pin=el('button',{'class':'btn'+(d.pinned?' ghost':''),type:'button',text:d.pinned?'Открепить':'Закрепить'});
+      pin.addEventListener('click',function(){PLAN[d.date]=PLAN[d.date]||{};PLAN[d.date].pinned=d.pinned?null:L.id;PLAN[d.date].scen=d.scen;savePlan();setStatus('plan-status',d.pinned?'Откреплено.':'Закреплено на '+dayLabel(d.date).replace(/^[^,]+, /,'')+'.');renderPlan();if(d.date===addDays(TODAY(),0))renderDay()});
+      body.appendChild(el('div',{'class':'actions'},[pin,d.pinned?null:nx]));
+    }
+    box.appendChild(el('article',{'class':'pday'+(d.pinned?' pinned':'')},[wx,body]));
+  });
+}
+// Что подготовить с вечера
+function prepList(L,c){
+  var o=outerAdvice(c), items=L.codes.map(function(x){return x+' '+nm(x)});
+  if(o[0]&&L.codes.indexOf(o[0])<0)items.push(o[0]+' '+nm(o[0])+' — сверху');
+  var bag=L.bag?'коричневая замшевая сумка':(bagTag(L)?'тоут С1':'');
+  if(bag)items.push(bag);
+  var extra=[];
+  if(c.prec==='snow'||c.band==='frost'||c.band==='severe'){if(L.codes.some(function(x){return /^О[124]/.test(x)}))extra.push('Туфли — в тоут, в дорогу ботинки О5.')}
+  if(c.prec==='rain'&&L.codes.some(function(x){return ITEM[x]&&ITEM[x].suede}))extra.push('Замшу заменить: дождь.');
+  if(L.codes.some(function(x){return /^(Р1|Р2|Р3|Р4|Р5|Р6|Р7|Ж4|П3|П4)$/.test(x)}))extra.push('Рубашку или атлас — отпарить.');
+  if(c.band==='frost'||c.band==='severe')extra.push('Термослой, шапка, варежки.');
+  var ul=el('ul');items.forEach(function(t){ul.appendChild(el('li',{text:t}))});
+  var box=el('div',{'class':'prep'},[el('b',{text:'Подготовить с вечера'}),ul]);
+  extra.forEach(function(t){box.appendChild(el('div',{text:t}))});
+  return box;
+}
+document.getElementById('plan-reset').addEventListener('click',function(){Object.keys(PLAN).forEach(function(k){if(PLAN[k])PLAN[k].pinned=null});savePlan();setStatus('plan-status','Закрепления сняты.');renderPlan();renderDay()});
+
+/* ---------- journal ---------- */
+function addEntry(e){
+  e.id=e.id||(Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+  var c=ctx(e.date);
+  e.wx=e.wx||{band:c.band,prec:c.prec,fmin:c.w?Math.round(c.w.fmin):null,fmax:c.w?Math.round(c.w.fmax):null};
+  var i=LOG.findIndex(function(x){return x.id===e.id});
+  if(i>=0)LOG[i]=e;else LOG.push(e);
+  saveLog();
+}
+function openEditor(o){
+  var dlg=document.getElementById('dlg'), f=document.getElementById('dlg-form'); f.innerHTML='';
+  var e=o.entry?JSON.parse(JSON.stringify(o.entry)):{date:o.date||TODAY(),lookId:o.look?o.look.id:null,base:o.look?o.look.codes.slice():[],final:o.look?o.look.codes.slice():[],scen:o.look?o.look.scen[0]:(st.scen!=='all'?st.scen:'office'),reasons:[],comment:'',rating:0};
+  if(o.rebuild){e.date=TODAY();e.id=null;e.rating=0;e.reasons=[];e.comment='';e.base=o.rebuild.final.slice();e.final=o.rebuild.final.slice();e.lookId=o.rebuild.lookId;e.scen=o.rebuild.scen}
+  var L=e.lookId!=null?lookById(e.lookId):null;
+  f.appendChild(el('div',{'class':'eyebrow',text:'Дневник'}));
+  f.appendChild(el('h2',{id:'dlg-h',text:o.entry?'Изменить запись':'Что вы надели'}));
+  if(L)f.appendChild(el('div',{'class':'muted',style:'font-size:13px',text:'По образу: «'+L.title+'»'}));
+  var date=el('input',{type:'date',id:'e-date',value:e.date,'aria-label':'Дата'});
+  var scen=el('select',{id:'e-scen','aria-label':'Сценарий'});
+  SCEN.slice(1).forEach(function(s){var op=el('option',{value:s[0],text:s[1]});if(s[0]===e.scen)op.selected=true;scen.appendChild(op)});
+  f.appendChild(el('div',{'class':'row',style:'align-items:center'},[el('label',{'for':'e-date','class':'muted',style:'font-size:13px',text:'Дата'}),date,el('label',{'for':'e-scen','class':'muted',style:'font-size:13px',text:'Сценарий'}),scen]));
+  date.style.width='auto';
+  f.appendChild(el('div',{'class':'lbl',text:'Что было на вас'}));
+  var items=el('div',{'class':'items-edit'}), diffBox=el('div',{'class':'diff'});
+  function drawItems(){
+    items.innerHTML='';
+    e.final.forEach(function(c){var it=ITEM[c];if(!it)return;
+      var rm=el('button',{'class':'rm',type:'button','aria-label':'Убрать '+it.name,text:'✕'});
+      rm.addEventListener('click',function(){e.final.splice(e.final.indexOf(c),1);drawItems()});
+      items.appendChild(el('figure',null,[el('img',{src:'img/'+it.file+'.jpg',alt:''}),rm,(function(){var fc=el('figcaption');fc.innerHTML='<b>'+esc(c)+'</b> '+esc(it.name);return fc})()]));
+    });
+    if(!e.final.length)items.appendChild(el('p',{'class':'muted',style:'font-size:13px;margin:0',text:'Пока пусто — добавьте вещи ниже.'}));
+    var d=diffOf(e); diffBox.innerHTML='';
+    if(e.base.length){
+      if(d.removed.length)diffBox.appendChild(el('span',{'class':'minus',text:'Убрала: '+d.removed.map(function(c){return c+' '+nm(c)}).join(', ')}));
+      if(d.added.length)diffBox.appendChild(el('span',{'class':'plus',text:'Добавила: '+d.added.map(function(c){return c+' '+nm(c)}).join(', ')}));
+      if(!d.removed.length&&!d.added.length)diffBox.appendChild(el('span',{'class':'muted',text:'Без изменений относительно образа.'}));
+    }
+  }
+  f.appendChild(items); f.appendChild(diffBox);
+  var addWrap=el('details'); addWrap.appendChild(el('summary',{text:'Добавить или заменить вещь'}));
+  buildPicker(addWrap,{g:''},function(){return e.final},function(id){var k=e.final.indexOf(id);if(k>=0)e.final.splice(k,1);else e.final.push(id);drawItems()});
+  f.appendChild(addWrap);
+  f.appendChild(el('div',{'class':'lbl',text:'Почему поменяли'}));
+  var rs=el('div',{'class':'row'});
+  REASONS.forEach(function(r){var b=chip(r,e.reasons.indexOf(r)>=0,function(){var k=e.reasons.indexOf(r);if(k>=0)e.reasons.splice(k,1);else e.reasons.push(r);b.setAttribute('aria-pressed',k>=0?'false':'true')},true);rs.appendChild(b)});
+  f.appendChild(rs);
+  f.appendChild(el('div',{'class':'lbl',text:'Оценка образа'}));
+  var vs=el('div',{'class':'row',role:'radiogroup','aria-label':'Оценка от 1 до 5'}), vname=el('span',{'class':'muted',style:'font-size:13px;align-self:center'});
+  if(!e.rating&&e.verdict)e.rating=rateOf(e);
+  function drawV(){vs.innerHTML='';[1,2,3,4,5].forEach(function(n){var b=chip(String(n),e.rating===n,function(){e.rating=n;drawV()},true);b.setAttribute('role','radio');b.setAttribute('aria-checked',e.rating===n?'true':'false');b.style.minWidth='40px';vs.appendChild(b)});vname.textContent=e.rating?stars(e.rating)+' '+RATE_NAME[e.rating]:'';vs.appendChild(vname)}
+  drawV(); f.appendChild(vs);
+  f.appendChild(el('label',{'class':'lbl','for':'e-comment',text:'Обратная связь'}));
+  var ta=el('textarea',{id:'e-comment',placeholder:'Что понравилось, что нет, что поменять в следующий раз. Например: в лодочках было скользко, переобулась в ботинки; жакет Ж2 тянет в плечах.'}); ta.value=e.comment||'';
+  f.appendChild(ta);
+  var err=el('div',{'class':'err',role:'alert'});
+  var save=el('button',{'class':'btn',type:'button',text:'Сохранить'});
+  var cancel=el('button',{'class':'btn ghost',type:'button',text:'Отмена'});
+  var actions=[save,cancel];
+  if(o.entry){
+    var del=el('button',{'class':'btn ghost',type:'button',text:'Удалить запись'}), armed=false;
+    del.addEventListener('click',function(){if(!armed){armed=true;del.textContent='Точно удалить? Нажмите ещё раз';return}
+      LOG=LOG.filter(function(x){return x.id!==e.id});saveLog();dlg.close();renderAll();setStatus('log-status','Запись удалена.')});
+    actions.push(del);
+  }
+  f.appendChild(el('div',{'class':'actions'},actions)); f.appendChild(err);
+  save.addEventListener('click',function(){
+    if(!e.final.length){err.textContent='Добавьте хотя бы одну вещь — иначе записывать нечего.';return}
+    if(!e.rating){err.textContent='Поставьте оценку от 1 до 5.';return}
+    delete e.verdict;
+    e.date=date.value||TODAY(); e.scen=scen.value; e.comment=ta.value.trim();
+    addEntry(e); dlg.close(); renderAll();
+    setStatus('log-status','Запись сохранена.');
+  });
+  cancel.addEventListener('click',function(){dlg.close()});
+  drawItems();
+  if(dlg.showModal)dlg.showModal();else dlg.setAttribute('open','');
+}
+document.getElementById('log-add').addEventListener('click',function(){openEditor({date:TODAY()})});
+
+function entryText(e){
+  var L=e.lookId!=null?lookById(e.lookId):null, d=diffOf(e), out=[];
+  var w=e.wx||{};
+  out.push(e.date+', '+(SCEN_NAME[e.scen]||'')+(w.band?', '+BAND_NAME[w.band]+(w.fmin!=null?' (ощущалось '+fmt(w.fmin)+'…'+fmt(w.fmax)+'°)':'')+', '+(PREC_NAME[w.prec]||''):''));
+  if(L)out.push('По образу: «'+L.title+'» ('+L.src+')');
+  out.push('Надела: '+e.final.map(function(c){return c+' '+nm(c)}).join(', '));
+  if(d.removed.length)out.push('Убрала: '+d.removed.map(function(c){return c+' '+nm(c)}).join(', '));
+  if(d.added.length)out.push('Добавила: '+d.added.map(function(c){return c+' '+nm(c)}).join(', '));
+  if(e.reasons.length)out.push('Почему: '+e.reasons.join('; '));
+  if(e.comment)out.push('Комментарий: '+e.comment);
+  out.push('Оценка: '+rateOf(e)+' из 5');
+  return out.join('\n');
+}
+function insights(){
+  var removed={}, added={}, reasons={}, wornItems={}, bad=[];
+  LOG.forEach(function(e){var d=diffOf(e);
+    d.removed.forEach(function(c){removed[c]=removed[c]||{n:0,why:{}};removed[c].n++;e.reasons.forEach(function(r){removed[c].why[r]=(removed[c].why[r]||0)+1})});
+    d.added.forEach(function(c){added[c]=(added[c]||0)+1});
+    e.reasons.forEach(function(r){reasons[r]=(reasons[r]||0)+1});
+    e.final.forEach(function(c){wornItems[c]=(wornItems[c]||0)+1});
+    if(rateOf(e)<=2)bad.push(e);
+  });
+  function top(o,n){return Object.keys(o).sort(function(a,b){return (o[b].n||o[b])-(o[a].n||o[a])}).slice(0,n)}
+  return {removed:top(removed,5).map(function(c){var w=removed[c].why;var r=Object.keys(w).sort(function(a,b){return w[b]-w[a]})[0];return c+' '+nm(c)+' — убирали '+removed[c].n+' раз'+(r?', чаще всего: «'+r+'»':'')}),
+    added:top(added,5).map(function(c){return c+' '+nm(c)+' — добавляли '+added[c]+' раз'}),
+    reasons:top(reasons,5).map(function(r){return r+' — '+reasons[r]}),
+    worn:top(wornItems,5).map(function(c){return c+' '+nm(c)+' — '+wornItems[c]}),
+    never:LOG.length>=10?D.items.filter(function(i){return !i.purchase&&!wornItems[i.id]&&!/^А/.test(i.id)}).map(function(i){return i.id+' '+i.name}):null,
+    bad:bad.map(function(e){return e.date+': '+e.final.map(function(c){return c}).join(', ')+(e.comment?' — '+e.comment:'')})};
+}
+function renderLog(){
+  var box=document.getElementById('log'), ins=document.getElementById('insights');
+  if(!box||!D)return;
+  box.innerHTML=''; ins.innerHTML='';
+  document.getElementById('log-count').textContent=LOG.length?LOG.length+' '+(LOG.length%10===1&&LOG.length%100!==11?'запись':(LOG.length%10>=2&&LOG.length%10<=4&&(LOG.length%100<10||LOG.length%100>=20)?'записи':'записей')):'';
+  if(!LOG.length){
+    box.appendChild(el('div',{'class':'empty panel',text:'Записей пока нет. Нажмите «Надела как есть» или «Надела с изменениями» у образа дня — или «Записать сегодняшний образ» выше, если собирали сами.'}));
+    ins.appendChild(el('p',{'class':'muted',style:'margin:0',text:'Здесь появятся выводы, когда наберётся несколько записей: какие вещи вы чаще убираете из образов и почему, что добавляете взамен, какие вещи не носите совсем.'}));
+    return;
+  }
+  var I=insights();
+  function block(title,list,empty){var d=el('div');d.appendChild(el('h3',{style:'margin:0 0 4px;font-size:14px',text:title}));
+    if(list&&list.length){var ul=el('ul',{style:'margin:0;padding-left:18px;font-size:13.5px'});list.forEach(function(t){ul.appendChild(el('li',{text:t}))});d.appendChild(ul)}
+    else d.appendChild(el('p',{'class':'muted',style:'margin:0;font-size:13px',text:empty}));return d}
+  ins.appendChild(block('Чаще всего убираете',I.removed,'Пока ничего не убирали.'));
+  ins.appendChild(block('Чаще всего добавляете взамен',I.added,'Пока ничего не добавляли.'));
+  ins.appendChild(block('Причины',I.reasons,'Причины не отмечены.'));
+  ins.appendChild(block('Носите чаще всего',I.worn,''));
+  if(I.bad.length)ins.appendChild(block('Образы с оценкой 1–2',I.bad,''));
+  ins.appendChild(block('Не надевали ни разу',I.never,'Список появится после 10 записей.'));
+  LOG.slice().sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:0}).forEach(function(e){
+    var L=e.lookId!=null?lookById(e.lookId):null, d=diffOf(e), w=e.wx||{};
+    var card=el('article',{'class':'jentry'});
+    card.appendChild(el('div',{'class':'row',style:'justify-content:space-between;align-items:baseline'},[el('b',{text:dayLabel(e.date)}),el('span',{'class':'tag'+(rateOf(e)<=2?' bad':''),text:stars(rateOf(e))+' '+rateOf(e)+'/5'})]));
+    card.appendChild(el('div',{'class':'muted',style:'font-size:12.5px',text:(SCEN_NAME[e.scen]||'')+(w.band?' · '+BAND_NAME[w.band]+(w.fmin!=null?', ощущалось '+fmt(w.fmin)+'…'+fmt(w.fmax)+'°':'')+', '+(PREC_NAME[w.prec]||''):'')+(L?' · по образу «'+L.title+'»':' · своя сборка')}));
+    card.appendChild(thumbs(e.final));
+    var df=el('div',{'class':'diff'});
+    if(d.removed.length)df.appendChild(el('span',{'class':'minus',text:'Убрала: '+d.removed.map(function(c){return c+' '+nm(c)}).join(', ')}));
+    if(d.added.length)df.appendChild(el('span',{'class':'plus',text:'Добавила: '+d.added.map(function(c){return c+' '+nm(c)}).join(', ')}));
+    if(e.reasons.length)df.appendChild(el('span',{text:'Почему: '+e.reasons.join('; ')}));
+    if(e.comment)df.appendChild(el('span',{'class':'muted',text:e.comment}));
+    card.appendChild(df);
+    var ed=el('button',{'class':'btn ghost',type:'button',text:'Изменить'});
+    ed.addEventListener('click',function(){openEditor({entry:e})});
+    var rb=el('button',{'class':'btn ghost',type:'button',text:'Пересобрать'});
+    rb.addEventListener('click',function(){openEditor({rebuild:e})});
+    card.appendChild(el('div',{'class':'actions'},[ed,rb]));
+    box.appendChild(card);
+  });
+}
+document.getElementById('log-copy').addEventListener('click',function(){
+  if(!LOG.length){setStatus('log-status','Дневник пока пуст.');return}
+  var I=insights();
+  var txt='Дневник образов: '+LOG.length+' записей\n\n'+LOG.slice().sort(function(a,b){return a.date<b.date?-1:1}).map(entryText).join('\n\n')+
+    '\n\nЧаще всего убираю: '+(I.removed.join('; ')||'—')+'\nЧаще добавляю: '+(I.added.join('; ')||'—')+'\nПричины: '+(I.reasons.join('; ')||'—');
+  var done=function(){setStatus('log-status','Скопировано. Вставьте текст в чат со стилистом.')};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt)});else fallbackCopy(txt);
+});
+function fallbackCopy(txt){
+  var ta=el('textarea');ta.value=txt;ta.setAttribute('readonly','');document.body.appendChild(ta);ta.select();
+  var ok=false;try{ok=document.execCommand('copy')}catch(e){}
+  document.body.removeChild(ta);
+  setStatus('log-status',ok?'Скопировано. Вставьте текст в чат со стилистом.':'Браузер не дал скопировать. Сохраните файл и пришлите его.');
+}
+document.getElementById('log-export').addEventListener('click',function(){
+  var blob=new Blob([JSON.stringify({version:1,exported:new Date().toISOString(),log:LOG,plan:PLAN},null,1)],{type:'application/json'});
+  var a=el('a',{href:URL.createObjectURL(blob),download:'dnevnik-obrazov-'+TODAY()+'.json'});document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1000);
+  setStatus('log-status','Файл сохранён в загрузки.');
+});
+document.getElementById('log-import').addEventListener('change',function(ev){
+  var file=ev.target.files[0]; if(!file)return;
+  var r=new FileReader();
+  r.onload=function(){try{
+    var j=JSON.parse(r.result), n=0;
+    (j.log||[]).forEach(function(e){if(e&&e.id&&e.date&&Array.isArray(e.final)&&!LOG.some(function(x){return x.id===e.id})){e.base=e.base||[];e.reasons=e.reasons||[];LOG.push(e);n++}});
+    if(j.plan)Object.keys(j.plan).forEach(function(k){if(!PLAN[k])PLAN[k]=j.plan[k]});
+    saveLog();savePlan();renderAll();setStatus('log-status','Загружено новых записей: '+n+'.');
+  }catch(e){setStatus('log-status','Это не файл дневника. Выберите файл, сохранённый кнопкой «Сохранить файл».')}
+  ev.target.value='';};
+  r.readAsText(file);
+});
+
+/* ---------- tabs ---------- */
+function showTab(t){
+  st.tab=t; ls('wd-tab',t);
+  ['today','plan','log'].forEach(function(k){document.getElementById('v-'+k).hidden=k!==t;document.getElementById('tab-'+k).setAttribute('aria-selected',k===t?'true':'false')});
+  if(t==='plan')renderPlan(); if(t==='log')renderLog();
+}
+['today','plan','log'].forEach(function(k){document.getElementById('tab-'+k).addEventListener('click',function(){showTab(k)})});
+
+function renderAll(){if(!D)return;renderToday();renderPicker();renderPlan();renderLog()}
+
+['own','wx','fresh','mine'].forEach(function(k){var e=document.getElementById('t-'+k);e.checked=st[k];e.addEventListener('change',function(){st[k]=e.checked;st.shift=0;persist();renderDay();renderGrid();renderPlan()})});
 
 document.getElementById('geo').addEventListener('click',function(){
   var s=document.getElementById('geo-status');
@@ -413,9 +896,11 @@ document.getElementById('geo').addEventListener('click',function(){
   },function(){s.textContent='Доступ к месту не дан — показываю Астану.'},{timeout:10000});
 });
 
+var startTab=(location.hash||'').replace('#','')||ls('wd-tab')||'today';
+if(['today','plan','log'].indexOf(startTab)<0)startTab='today';
 fetch('data.json').then(function(r){return r.json()}).then(function(j){
   D=j; D.items.forEach(function(i){ITEM[i.id]=i});
-  renderAll();
+  showTab(startTab); renderAll();
   var pl=ls('wd-place');
   if(pl)loadWeather(pl.lat,pl.lon,'ваше место'); else loadWeather(51.17,71.45,'Астана');
 }).catch(function(){document.getElementById('grid').innerHTML='<div class="empty panel">Не удалось загрузить данные капсулы. Обновите страницу.</div>'});
